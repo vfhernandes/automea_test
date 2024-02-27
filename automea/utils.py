@@ -293,3 +293,10 @@ def number_of_spikes_inside_burst(spikes_binary, burst):
         where1 = np.where(spikes_binary[channel] == 1)[0]
         number_inside += len(where1[(where1 >= burst[0]) & (where1 <= burst[-1])])
     return number_inside
+
+
+def _has_list(my_list):
+    for element in my_list:
+        if isinstance(element, list):
+            return True
+    return False

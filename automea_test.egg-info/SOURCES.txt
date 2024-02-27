@@ -1,0 +1,10 @@
+LICENSE
+README.md
+pyproject.toml
+automea/__init__.py
+automea/analyseMEA.py
+automea/automea.py
+automea_test.egg-info/PKG-INFO
+automea_test.egg-info/SOURCES.txt
+automea_test.egg-info/dependency_links.txt
+automea_test.egg-info/top_level.txt

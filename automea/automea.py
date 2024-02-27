@@ -7,12 +7,16 @@ with redirect_stderr(open(os.devnull, "w")):
 import h5py
 import numpy as np 
 import matplotlib.pyplot as plt
-from analyseMEA import *
+#from analyseMEA import *
+from automea_test import utils
 
 class AutoMEA:
 
 
     def __init__(self):
+
+        self.utils = utils
+
         # initialize attributes
         self.file = []
 
@@ -169,11 +173,7 @@ class AutoMEA:
         
         self.model = tf.keras.models.load_model(self.model_params['name'], compile = False)
 
-    def _has_list(self, my_list):
-        for element in my_list:
-            if isinstance(element, list):
-                return True
-        return False
+
 
     def loadsignal(self, signal):
         self.signal = signal
@@ -274,7 +274,7 @@ class AutoMEA:
         if size == None: size = self.total_timesteps_signal
 
         if input_type == 'spikes':
-            if self._has_list(input_timestamp) is False:
+            if self.utils._has_list(input_timestamp) is False:
             #if np.array(input_timestamp).ndim == 1:
                 _binary = np.zeros(size)
                 _binary[input_timestamp] = 1
@@ -399,7 +399,7 @@ class AutoMEA:
         if self.spikes is None: self.detect_spikes() # detect spikes if "detect_bursts" is called but no spikes are defined
 
         if method == 'default' or method == 'manual':
-            if self._has_list(self.spikes) is False:
+            if self.utils._has_list(self.spikes) is False:
                 self.reverbs = self._detect_reverbs(self.spikes)
                 self.reverbs_binary = self.convert_timestamps_to_binary(self.reverbs, input_type = 'reverbs')
             else:
@@ -416,7 +416,7 @@ class AutoMEA:
                 run_once = self.signal.ndim == 1
             elif input_type == 'spikes':
                 model_input = self.spikes_binary
-                run_once = not self._has_list(self.spikes)
+                run_once = not self.utils._has_list(self.spikes)
             else:
                 print('Input type or model not defined!')
                 return
@@ -476,7 +476,7 @@ class AutoMEA:
 
     def detect_bursts(self):
 
-        if self._has_list(self.spikes) is False:
+        if self.utils._has_list(self.spikes) is False:
             self.bursts = self._detect_bursts(self.reverbs)
         else:
             self.bursts = list(map(self._detect_bursts, self.reverbs))
@@ -823,8 +823,8 @@ class AutoMEA:
                     startTime = int(burst[0]*100)
                     duration = int((burst[-1]-burst[0])*100)
                     spikes = self.spikes_binary
-                    number = number_of_spikes_inside_burst(self.spikes_binary, burst)
-                    freq = mean_innetburst_frequency(spikes, [burst])
+                    number = self.utils.number_of_spikes_inside_burst(self.spikes_binary, burst)
+                    freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                     newRow = commonToRow.copy()
                     newRow.extend([startTime, duration, number, freq])
                     netBursts_data_pred.append(newRow)
@@ -846,8 +846,8 @@ class AutoMEA:
                         startTime = int(burst[0]*100)
                         duration = int((burst[-1]-burst[0])*100)
                         spikes = self.spikes_binary[channel].reshape(-1,1).T
-                        number = number_of_spikes_inside_burst(spikes, burst)
-                        freq = mean_innetburst_frequency(spikes, [burst])
+                        number = self.utils.number_of_spikes_inside_burst(spikes, burst)
+                        freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                         newRow = commonToRow.copy()
                         newRow.extend([startTime, duration, number, freq])
                         reverbs_data_pred.append(newRow)
@@ -856,33 +856,33 @@ class AutoMEA:
                         startTime = int(burst[0]*100)
                         duration = int((burst[-1]-burst[0])*100)
                         spikes = self.spikes_binary[channel].reshape(-1,1).T
-                        number = number_of_spikes_inside_burst(spikes, burst)
-                        freq = mean_innetburst_frequency(spikes, [burst])
+                        number = self.utils.number_of_spikes_inside_burst(spikes, burst)
+                        freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                         newRow = commonToRow.copy()
                         newRow.extend([startTime, duration, number, freq])
                         bursts_data_pred.append(newRow)
                         
                         
                 newRow = [filename, self.wellIndexLabelDict[wellID], np.where(self.wellsFromData == well)[0].shape[0]]   
-                newRow.extend([total_number_of_binary(self.spikes_binary)])
-                newRow.extend([mean_firing_rate(self.spikes_binary, total_seconds = self.total_timesteps_signal//self.samplingFreq)])
+                newRow.extend([self.utils.total_number_of_binary(self.spikes_binary)])
+                newRow.extend([self.utils.mean_firing_rate(self.spikes_binary, total_seconds = self.total_timesteps_signal//self.samplingFreq)])
 
-                newRow.extend([random_spikes_percentage_net(self.spikes_binary, pred_net_bursts)]) # net
-                newRow.extend([total_number_of_netBursts(pred_net_bursts)]) # net
-                newRow.extend([mean_netbursting_rate(pred_net_bursts, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)]) # net
-                newRow.extend([mean_netburst_duration(pred_net_bursts)]) # net
+                newRow.extend([self.utils.random_spikes_percentage_net(self.spikes_binary, pred_net_bursts)]) # net
+                newRow.extend([self.utils.total_number_of_netBursts(pred_net_bursts)]) # net
+                newRow.extend([self.utils.mean_netbursting_rate(pred_net_bursts, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)]) # net
+                newRow.extend([self.utils.mean_netburst_duration(pred_net_bursts)]) # net
 
-                newRow.extend([mean_interNetBurstTrain_interval(pred_net_bursts)])
-                newRow.extend([coeff_variance_interNetBurstTrain_interval(pred_net_bursts)])
-                newRow.extend([mean_bursts_per_burstTrain(pred_reverbs, pred_bursts)])
-                newRow.extend([median_bursts_per_burstTrain(pred_reverbs, pred_bursts)])
-                newRow.extend([mean_bursts_per_burstTrain(pred_net_reverbs, pred_net_bursts, net = True)])
-                newRow.extend([median_bursts_per_burstTrain(pred_net_reverbs, pred_net_bursts, net = True)])
+                newRow.extend([self.utils.mean_interNetBurstTrain_interval(pred_net_bursts)])
+                newRow.extend([self.utils.coeff_variance_interNetBurstTrain_interval(pred_net_bursts)])
+                newRow.extend([self.utils.mean_bursts_per_burstTrain(pred_reverbs, pred_bursts)])
+                newRow.extend([self.utils.median_bursts_per_burstTrain(pred_reverbs, pred_bursts)])
+                newRow.extend([self.utils.mean_bursts_per_burstTrain(pred_net_reverbs, pred_net_bursts, net = True)])
+                newRow.extend([self.utils.median_bursts_per_burstTrain(pred_net_reverbs, pred_net_bursts, net = True)])
 
-                newRow.extend([total_number_of_netBursts(pred_net_reverbs)]) # net
-                newRow.extend([mean_netbursting_rate(pred_net_reverbs, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)]) # net
-                newRow.extend([mean_netburst_duration(pred_net_reverbs)]) # net
-                newRow.extend([mean_innetburst_frequency(self.spikes_binary, pred_net_reverbs)]) # net
+                newRow.extend([self.utils.total_number_of_netBursts(pred_net_reverbs)]) # net
+                newRow.extend([self.utils.mean_netbursting_rate(pred_net_reverbs, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)]) # net
+                newRow.extend([self.utils.mean_netburst_duration(pred_net_reverbs)]) # net
+                newRow.extend([self.utils.mean_innetburst_frequency(self.spikes_binary, pred_net_reverbs)]) # net
 
                 stats_data_pred.append(newRow)
 
@@ -902,8 +902,8 @@ class AutoMEA:
                         startTime = int(burst[0]*100)
                         duration = int((burst[-1]-burst[0])*100)
                         spikes = self.spikes_binary
-                        number = number_of_spikes_inside_burst(self.spikes_binary, burst)
-                        freq = mean_innetburst_frequency(spikes, [burst])
+                        number = self.utils.number_of_spikes_inside_burst(self.spikes_binary, burst)
+                        freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                         newRow = commonToRow.copy()
                         newRow.extend([startTime, duration, number, freq])
                         netBursts_data_def.append(newRow)
@@ -919,8 +919,8 @@ class AutoMEA:
                             startTime = int(burst[0]*100)
                             duration = int((burst[-1]-burst[0])*100)
                             spikes = self.spikes_binary[channel].reshape(-1,1).T
-                            number = number_of_spikes_inside_burst(spikes, burst)
-                            freq = mean_innetburst_frequency(spikes, [burst])
+                            number = self.utils.number_of_spikes_inside_burst(spikes, burst)
+                            freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                             newRow = commonToRow.copy()
                             newRow.extend([startTime, duration, number, freq])
                             reverbs_data_def.append(newRow)
@@ -930,33 +930,33 @@ class AutoMEA:
                             startTime = int(burst[0]*100)
                             duration = int((burst[-1]-burst[0])*100)
                             spikes = self.spikes_binary[channel].reshape(-1,1).T
-                            number = number_of_spikes_inside_burst(spikes, burst)
-                            freq = mean_innetburst_frequency(spikes, [burst])
+                            number = nself.utils.umber_of_spikes_inside_burst(spikes, burst)
+                            freq = self.utils.mean_innetburst_frequency(spikes, [burst])
                             newRow = commonToRow.copy()
                             newRow.extend([startTime, duration, number, freq])
                             bursts_data_def.append(newRow)
                             
                             
                     newRow = [filename, self.wellIndexLabelDict[wellID], np.where(self.wellsFromData == well)[0].shape[0]]   
-                    newRow.extend([total_number_of_binary(self.spikes_binary)])
-                    newRow.extend([mean_firing_rate(self.spikes_binary, total_seconds = self.total_timesteps_signal//self.samplingFreq)])
+                    newRow.extend([self.utils.total_number_of_binary(self.spikes_binary)])
+                    newRow.extend([self.utils.mean_firing_rate(self.spikes_binary, total_seconds = self.total_timesteps_signal//self.samplingFreq)])
 
-                    newRow.extend([random_spikes_percentage_net(self.spikes_binary, default_net_bursts)])
-                    newRow.extend([total_number_of_netBursts(default_net_bursts)])
-                    newRow.extend([mean_netbursting_rate(default_net_bursts, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)])
-                    newRow.extend([mean_netburst_duration(default_net_bursts)])
+                    newRow.extend([self.utils.random_spikes_percentage_net(self.spikes_binary, default_net_bursts)])
+                    newRow.extend([self.utils.total_number_of_netBursts(default_net_bursts)])
+                    newRow.extend([self.utils.mean_netbursting_rate(default_net_bursts, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)])
+                    newRow.extend([self.utils.mean_netburst_duration(default_net_bursts)])
 
-                    newRow.extend([mean_interNetBurstTrain_interval(default_net_bursts)])
-                    newRow.extend([coeff_variance_interNetBurstTrain_interval(default_net_bursts)])
-                    newRow.extend([mean_bursts_per_burstTrain(default_reverbs, default_bursts)])
-                    newRow.extend([median_bursts_per_burstTrain(default_reverbs, default_bursts)])
-                    newRow.extend([mean_bursts_per_burstTrain(default_net_reverbs, default_net_bursts, net = True)])
-                    newRow.extend([median_bursts_per_burstTrain(default_net_reverbs, default_net_bursts, net = True)]) # net reverbs per net bursts
+                    newRow.extend([self.utils.mean_interNetBurstTrain_interval(default_net_bursts)])
+                    newRow.extend([self.utils.coeff_variance_interNetBurstTrain_interval(default_net_bursts)])
+                    newRow.extend([self.utils.mean_bursts_per_burstTrain(default_reverbs, default_bursts)])
+                    newRow.extend([self.utils.median_bursts_per_burstTrain(default_reverbs, default_bursts)])
+                    newRow.extend([self.utils.mean_bursts_per_burstTrain(default_net_reverbs, default_net_bursts, net = True)])
+                    newRow.extend([self.utils.median_bursts_per_burstTrain(default_net_reverbs, default_net_bursts, net = True)]) # net reverbs per net bursts
              
-                    newRow.extend([total_number_of_netBursts(default_net_reverbs)])
-                    newRow.extend([mean_netbursting_rate(default_net_reverbs, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)])
-                    newRow.extend([mean_netburst_duration(default_net_reverbs)])
-                    newRow.extend([mean_innetburst_frequency(self.spikes_binary, default_net_reverbs)])
+                    newRow.extend([self.utils.total_number_of_netBursts(default_net_reverbs)])
+                    newRow.extend([self.utils.mean_netbursting_rate(default_net_reverbs, total_minutes=self.total_timesteps_signal//self.samplingFreq//60)])
+                    newRow.extend([self.utils.mean_netburst_duration(default_net_reverbs)])
+                    newRow.extend([self.utils.mean_innetburst_frequency(self.spikes_binary, default_net_reverbs)])
                     
                     stats_data_def.append(newRow)
 
@@ -1032,7 +1032,7 @@ class AutoMEA:
             if isinstance(spikes, np.ndarray) and signal.ndim == 1:
                 print('More than one spike channel input!')
                 return
-            elif self._has_list(spikes):
+            elif self.utils._has_list(spikes):
                 print('More than one spike channel input!')
                 return
             spikes = np.array(spikes)
@@ -1058,7 +1058,7 @@ class AutoMEA:
                 if reverberations.ndim > 2:
                     print("More than one reverberations channel input!")
                     return
-            elif self._has_list(reverberations[0]):
+            elif self.utils._has_list(reverberations[0]):
                     print("More than one reverberations channel input!")
                     return            
             reverbs_to_plot = select_bursts_to_plot(reverberations, start_timestamp, end_timestamp)
@@ -1070,7 +1070,7 @@ class AutoMEA:
                 if bursts.ndim > 2:
                     print("More than one reverberations channel input!")
                     return
-            elif self._has_list(bursts[0]):
+            elif self.utils._has_list(bursts[0]):
                     print("More than one reverberations channel input!")
                     return            
             bursts_to_plot = select_bursts_to_plot(bursts, start_timestamp, end_timestamp)
@@ -1081,7 +1081,7 @@ class AutoMEA:
                 if net_bursts.ndim > 2:
                     print("More than one reverberations channel input!")
                     return
-            elif self._has_list(net_bursts[0]):
+            elif self.utils._has_list(net_bursts[0]):
                     print("More than one reverberations channel input!")
                     return            
             net_bursts_to_plot = select_bursts_to_plot(net_bursts, start_timestamp, end_timestamp)
@@ -1119,7 +1119,7 @@ class AutoMEA:
 
     def plot_raster(self, spikes, reverbs = None, bursts = None, net_reverbs = None, net_bursts = None):
         
-        if self._has_list(spikes):
+        if self.utils._has_list(spikes):
             number_of_channels = len(spikes)
         else:
             number_of_channels = 1

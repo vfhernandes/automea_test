@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: automea_test
+Version: 0.0.1
+Summary: Automated analysis of MEA datasets
+Author-email: Vinicius Hernandes <viniciusfhernandes@gmail.com>
+Project-URL: Homepage, https://github.com/vfhernandes/automea_test
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# automea_test
+
+
+*automea* (Automated analysis of MEA datasets) is a open-source Python package for the analysis of Micro-Electrode Array (MEA) datasets. 
+
+Bursts are detected using the *Max Interval Method*. Users can manually set *Max Interval Parameters*, or can use a machine learning model that dynamically predicts optimal parameters for specific recording times. Several models are distributed with *automea*, and users are free to fine-tune the existing models for their specific needs, or upload new models completely.  
+
+The machine-learning-based burst detection routine is explained in the package accompanying paper. 
