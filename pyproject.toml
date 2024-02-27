@@ -1,8 +1,8 @@
 [project]
-name = "automea"
+name = "automea_test"
 version = "0.0.1"
 authors = [
-  { name="Vinicius Hernandes", email="v.hernandes@tudelft.nl" },
+  { name="Vinicius Hernandes", email="viniciusfhernandes@gmail.com" },
 ]
 description = "Automated analysis of MEA datasets"
 readme = "README.md"
@@ -14,5 +14,4 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Homepage = "https://github.com/vfhernandes/automea_test"
