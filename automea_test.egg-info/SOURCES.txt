@@ -3,6 +3,7 @@ README.md
 pyproject.toml
 automea/__init__.py
 automea/util.py
+automea/training/models.py
 automea_test.egg-info/PKG-INFO
 automea_test.egg-info/SOURCES.txt
 automea_test.egg-info/dependency_links.txt

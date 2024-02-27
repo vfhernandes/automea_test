@@ -171,7 +171,7 @@ class Analysis:
                 self.model_params['window_overlap'] = 25_000
 
         
-        self.model = tf.keras.models.load_model(self.model_params['name'], compile = False)
+        self.model = tf.keras.models.load_model('models/'+self.model_params['name'], compile = False)
 
 
 
