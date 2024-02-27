@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 #from analyseMEA import *
 from automea import util
 
-class AutoMEA:
+class Analysis:
 
 
     def __init__(self):
@@ -682,7 +682,7 @@ class AutoMEA:
 
         
 
-    def full_analysis(self, file = None, mode = 'csv', save_default = True):
+    def analyze_dataset(self, file = None, mode = 'csv', save_default = True):
 
         ## create output folder to save analysis
         output_folder_exists = os.path.exists(self.output_folder)
