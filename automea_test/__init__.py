@@ -34,6 +34,7 @@ class Analysis:
 
         self.output_folder = None
         
+        
         self.wellsIDs = []
 
         self.wellsLabels = []
