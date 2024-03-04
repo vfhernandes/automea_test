@@ -28,6 +28,8 @@ class Analysis:
         
         self.path_to_csv = ''
 
+        self.path_to_model = ''
+
         self.output_name = ''
 
         self.output_folder = ''
@@ -171,7 +173,7 @@ class Analysis:
                 self.model_params['window_overlap'] = 25_000
 
         
-        self.model = tf.keras.models.load_model('models/'+self.model_params['name'], compile = False)
+        self.model = tf.keras.models.load_model(self.path_to_model+self.model_params['name'], compile = False)
 
 
 
@@ -930,7 +932,7 @@ class Analysis:
                             startTime = int(burst[0]*100)
                             duration = int((burst[-1]-burst[0])*100)
                             spikes = self.spikes_binary[channel].reshape(-1,1).T
-                            number = nself.util.umber_of_spikes_inside_burst(spikes, burst)
+                            number = self.util.umber_of_spikes_inside_burst(spikes, burst)
                             freq = self.util.mean_innetburst_frequency(spikes, [burst])
                             newRow = commonToRow.copy()
                             newRow.extend([startTime, duration, number, freq])
