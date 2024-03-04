@@ -32,7 +32,7 @@ class Analysis:
 
         self.output_name = ''
 
-        self.output_folder = ''
+        self.output_folder = None
         
         self.wellsIDs = []
 
@@ -115,7 +115,7 @@ class Analysis:
 
 
     def files_and_well_csv(self, file):
-        filenames_and_wells = pd.read_csv(file, sep = ';')
+        filenames_and_wells = pd.read_csv(self.path_to_csv+file, sep = ';')
         self.dataset = []
         for index in filenames_and_wells.index:
             self.dataset.append(filenames_and_wells['filename'][index])
@@ -680,7 +680,7 @@ class Analysis:
         columns_spikes = ['Channel ID', 'Channel Label', 'Well ID', 'Well Label', 'Compound ID', 'Compound Name']
         columns_spikes.extend(['Experiment', 'Dose [pM]', 'Dose Label'])
         columns_spikes.extend(['timestamp'])
-        spikes_data_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_PREDICTED_NEW.csv')
+        spikes_data_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_PREDICTED.csv')
 
         
 
@@ -932,7 +932,7 @@ class Analysis:
                             startTime = int(burst[0]*100)
                             duration = int((burst[-1]-burst[0])*100)
                             spikes = self.spikes_binary[channel].reshape(-1,1).T
-                            number = self.util.umber_of_spikes_inside_burst(spikes, burst)
+                            number = self.util.number_of_spikes_inside_burst(spikes, burst)
                             freq = self.util.mean_innetburst_frequency(spikes, [burst])
                             newRow = commonToRow.copy()
                             newRow.extend([startTime, duration, number, freq])
@@ -967,13 +967,13 @@ class Analysis:
         ### save files
         ########################      
 
-        spikes_data_file = os.path.join(self.output_folder, f'{self.output_name}_SPIKES_NEW.csv')
+        spikes_data_file = os.path.join(self.output_folder, f'{self.output_name}_SPIKES.csv')
         if self.analysis_params['save_spikes']: pd.DataFrame(spikes_data[1:], columns = spikes_data[0]).to_csv(spikes_data_file, index = False)
 
-        reverbs_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_PREDICTED_NEW.csv')
-        bursts_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_BURSTS_PREDICTED_NEW.csv')
-        netBursts_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_NET_BURSTS_PREDICTED_NEW.csv')
-        stats_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_STATS_PREDICTED_NEW.csv')
+        reverbs_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_PREDICTED.csv')
+        bursts_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_BURSTS_PREDICTED.csv')
+        netBursts_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_NET_BURSTS_PREDICTED.csv')
+        stats_data_pred_file = os.path.join(self.output_folder, f'{self.output_name}_STATS_PREDICTED.csv')
 
         if self.analysis_params['save_reverbs']    : pd.DataFrame(reverbs_data_pred[1:], columns = reverbs_data_pred[0]).to_csv(reverbs_data_pred_file, index = False)
         if self.analysis_params['save_bursts']     : pd.DataFrame(bursts_data_pred[1:], columns = bursts_data_pred[0]).to_csv(bursts_data_pred_file, index = False)
@@ -982,10 +982,10 @@ class Analysis:
 
 
         if save_default:            
-            reverbs_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_DEFAULT_NEW.csv')
-            bursts_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_BURSTS_DEFAULT_NEW.csv')
-            netBursts_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_NET_BURSTS_DEFAULT_NEW.csv')
-            stats_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_STATS_DEFAULT_NEW.csv')
+            reverbs_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_REVERBS_DEFAULT.csv')
+            bursts_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_BURSTS_DEFAULT.csv')
+            netBursts_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_NET_BURSTS_DEFAULT.csv')
+            stats_data_def_file = os.path.join(self.output_folder, f'{self.output_name}_STATS_DEFAULT.csv')
 
             if self.analysis_params['save_reverbs']    : pd.DataFrame(reverbs_data_def[1:], columns = reverbs_data_def[0]).to_csv(reverbs_data_def_file, index = False)
             if self.analysis_params['save_bursts']     : pd.DataFrame(bursts_data_def[1:], columns = bursts_data_def[0]).to_csv(bursts_data_def_file, index = False)
