@@ -18,13 +18,13 @@ class Analysis:
         self.util = util
 
         # initialize attributes
-        self.file = []
+        self.dataset = []
 
-        self.filename = ''
+        self.dataset_filename = ''
 
-        self.file_index = None
+        self.dataset_index = None
         
-        self.path_to_file = ''
+        self.path_to_dataset = ''
         
         self.path_to_csv = ''
 
@@ -116,9 +116,9 @@ class Analysis:
 
     def files_and_well_csv(self, file):
         filenames_and_wells = pd.read_csv(file, sep = ';')
-        self.file = []
+        self.dataset = []
         for index in filenames_and_wells.index:
-            self.file.append(filenames_and_wells['filename'][index])
+            self.dataset.append(filenames_and_wells['filename'][index])
             if filenames_and_wells['wells'][index] == 'all':
                 self.wellsLabels = list(self.wellIndexLabelDict.values())
             else:
@@ -187,10 +187,10 @@ class Analysis:
     def loadh5(self, filename = None):
         
         if filename is None:
-            self.h5 = h5py.File(self.path_to_file + self.file, 'r')
+            self.h5 = h5py.File(self.path_to_dataset + self.dataset, 'r')
         else:
-            self.h5 = h5py.File(self.path_to_file + filename, 'r')
-            self.file = filename
+            self.h5 = h5py.File(self.path_to_dataset + filename, 'r')
+            self.dataset = filename
             #self.file.append(filename)
         self.infoChannel = np.asarray(self.h5['Data']['Recording_0']['AnalogStream']['Stream_0']['InfoChannel'])
         try:
@@ -751,10 +751,10 @@ class Analysis:
             self.files_and_well_csv(file)
 
 
-        for file_index, filename in enumerate(self.file):
+        for file_index, filename in enumerate(self.dataset):
 
-            self.filename = filename 
-            self.file_index = file_index 
+            self.dataset_filename = filename 
+            self.dataset_index = file_index 
 
             print('\n Analyzing dataset: ', filename, '\n')
 
