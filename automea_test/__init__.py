@@ -32,8 +32,8 @@ class Analysis:
 
         self.output_name = ''
 
-        self.output_folder = None
-        
+        self.output_folder = ''
+
         
         self.wellsIDs = []
 
@@ -685,11 +685,11 @@ class Analysis:
 
         
 
-    def analyze_dataset(self, file = None, mode = 'csv', save_default = True):
+    def analyze_dataset(self, file = None, mode = 'csv', save_default = False):
 
         ## create output folder to save analysis
-        output_folder_exists = os.path.exists(self.output_folder)
-        if not output_folder_exists:
+        #output_folder_exists = os.path.exists(self.output_folder)
+        if self.output_folder != '':# not output_folder_exists:
            os.makedirs(self.output_folder)
 
         print('--- Running full analysis ---\n')
