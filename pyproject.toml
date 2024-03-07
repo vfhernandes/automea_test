@@ -1,6 +1,6 @@
 [project]
 name = "automea-test"
-version = "0.0.11"
+version = "0.0.13"
 authors = [
   { name="Vinicius Hernandes", email="viniciusfhernandes@gmail.com" },
 ]

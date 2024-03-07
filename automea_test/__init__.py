@@ -190,8 +190,11 @@ class Analysis:
         except:
             print('Error when trying to allocate "signal".')
         self.adZero = np.array([self.infoChannel[i][8] for i in range(len(self.infoChannel))]).reshape(len(self.infoChannel), 1)
+        if len(np.unique(self.adZero)): self.adZero = self.adZero[0][0]
         self.conversionFactor =  np.array([self.infoChannel[i][10] for i in range(len(self.infoChannel))]).reshape(len(self.infoChannel), 1)
+        if len(np.unique(self.conversionFactor)): self.conversionFactor = self.conversionFactor[0][0]
         self.exponent = np.array([self.infoChannel[i][7] for i in range(len(self.infoChannel))]).reshape(len(self.infoChannel), 1)
+        if len(np.unique(self.exponent)): self.exponent = self.exponent[0][0]
         self.wellsFromData = np.array([self.infoChannel[i][2] for i in range(len(self.infoChannel))]).reshape(len(self.infoChannel), 1)
         self.wellsFromData = self.wellsFromData.flatten()
 
