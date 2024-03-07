@@ -15,71 +15,75 @@ class Analysis:
 
     def __init__(self):
 
+        # import util functions
         self.util = util
 
-        # initialize attributes
+        # initialize attributes to empty list/ empty string / None
         self.dataset = []
-
         self.dataset_filename = ''
-
         self.dataset_index = None
-        
         self.path_to_dataset = ''
-        
         self.path_to_csv = ''
-
         self.path_to_model = ''
-
         self.output_name = ''
-
         self.output_folder = ''
-
-        
         self.wellsIDs = []
-
         self.wellsLabels = []
-
         self.well = None
-
         self.model = None
-
         self.model_name = None
-        
         self.signal = None
-        
+        self.time = None
         self.spikes = None
-
         self.spikes_binary = None
-
         self.reverbs = None
-
         self.reverbs_binary = None
-
         self.bursts = None
-
         self.bursts_binary = None
-        
-        self.samplingFreq = 10_000
+        self.plot_name = None
 
-        self.total_timesteps_signal = 6_000_000
 
-        self.threshold_params = {'rising'      : 5,
-                                'startTime'    : 0, 
-                                'baseTime'     : 0.250, #ms 
-                                'segments'     : 10}
+        self.samplingFreq = 10_000 # default sampling frequency = 10kHZ
 
-        self.spikes_params = {'deadtime': 3_000*1e-6}
+        self.total_timesteps_signal = 6_000_000 #default number of timesteps in one recording - 10min = 60s (for sampl freq 10kHz) = 6million points
 
-        self.reverbs_params = {'max_interval_start'   : 15,
+        self.time = np.linspace(0, (self.total_timesteps_signal-1)/self.samplingFreq, self.total_timesteps_signal) # time array in seconds
+
+        # parameters used to detect threshold
+        self.threshold_params = {'rising'      : 5, # how many standard deviations are used to set threshold
+                                'startTime'    : 0, # start time to consider signal
+                                'baseTime'     : 0.250, # in ms, for how long to consider signal for std calculation 
+                                'segments'     : 10} # how many segment to perform calculation
+
+        self.spikes_params = {'deadtime': 3_000*1e-6} # time after detecting a spike for which spike detection is halted
+
+        # parameters used for reverberations / bursts detection - Max Interval parameters
+        self.reverbs_params = {'max_interval_start'   : 15, 
                               'max_interval_end'     : 20,
                               'min_interval_between' : 25,
                               'min_duration'         : 20,
                               'min_spikes'           : 5}
 
+        # parameter to merge reverberations into bursts
         self.bursts_params = {'min_interval_between'   : 300}
 
-        self.plot_name = None
+        # pretained ML models for burst detection distributed with the package
+        self._pretrained_models = ['signal30.h5']
 
+        # parameters for model based burst detection
+        self.model_params = {'name'           : None, # name of the model
+                             'input_type'     : None, # type of input: signal or spikes
+                             'input_average'  : 30,   # how many points is used to calculate average of input
+                             'window_size'    : 50_000, # size of window (in timestamps) used as input for the model (before averaging)
+                             'window_overlap' : 25_000} # overlap between windows when sweeping a channel
+
+        # parameters for analysis - which quantities user wants to save - each one creates an output file
+        self.analysis_params = {'save_spikes'      : False,
+                                'save_reverbs'     : False,
+                                'save_bursts'      : False,
+                                'save_net_reverbs' : False,
+                                'save_net_bursts'  : False,
+                                'save_stats'       : False}
 
         # define dictionary for well labels to index and vice-versa,
         # based on plate with 4x6 wells
@@ -93,29 +97,13 @@ class Analysis:
                 keys.append(i)
                 items.append(f'{j}{k}')
                 i += 1
-        self.wellIndexLabelDict = dict(zip(keys, items))
-        self.wellLabelIndexDict = dict(zip(items, keys))
-
-
-        self._pretrained_models = ['signal30.h5']
-
-        
-
-        self.model_params = {'name'           : None,
-                             'input_type'     : None,
-                             'input_average'  : 30,
-                             'window_size'    : 50_000,
-                             'window_overlap' : 25_000}
-
-        self.analysis_params = {'save_spikes'      : False,
-                                'save_reverbs'     : False,
-                                'save_bursts'      : False,
-                                'save_net_reverbs' : False,
-                                'save_net_bursts'  : False,
-                                'save_stats'       : False}
-
+        self.wellIndexLabelDict = dict(zip(keys, items)) # dictionary to convert well-index to well-label
+        self.wellLabelIndexDict = dict(zip(items, keys)) # dictionary to convert well-label to well-index
 
     def files_and_well_csv(self, file):
+        """
+        
+        """
         filenames_and_wells = pd.read_csv(self.path_to_csv+file, sep = ';')
         self.dataset = []
         for index in filenames_and_wells.index:
@@ -184,6 +172,8 @@ class Analysis:
             self.total_timesteps_signal = len(signal)
         else:
             self.total_timesteps_signal = np.array(signal).shape[1]
+        self.time = np.linspace(0, (self.total_timesteps_signal-1)/self.samplingFreq, self.total_timesteps_signal)
+
 
     def loadh5(self, filename = None):
         
@@ -687,9 +677,7 @@ class Analysis:
 
     def analyze_dataset(self, file = None, mode = 'csv', save_default = False):
 
-        ## create output folder to save analysis
-        #output_folder_exists = os.path.exists(self.output_folder)
-        if self.output_folder != '':# not output_folder_exists:
+        if self.output_folder != '':
            os.makedirs(self.output_folder)
 
         print('--- Running full analysis ---\n')
