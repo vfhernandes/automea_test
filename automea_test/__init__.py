@@ -196,6 +196,13 @@ class Analysis:
         self.wellsFromData = self.wellsFromData.flatten()
 
 
+    def convert_signal(self, signal, adzero, conversionfactor, exponent):
+        return 1e6*(signal-adzero)*conversionfactor*10.**exponent
+
+    def convert_threshold(self, threshold, adzero, conversionfactor, exponent):
+        return convert_signal(threshold, adZero, conversionfactor, exponent)
+
+        
     def loadspikes(self, spikes):
         self.spikes = spikes
 
