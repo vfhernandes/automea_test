@@ -2041,7 +2041,8 @@ class Analysis:
         plt.close()
 
 
-    def plot_raster(self, spikes, reverbs = None, bursts = None, net_reverbs = None, net_bursts = None):
+    def plot_raster(self, spikes, reverbs = None, bursts = None, net_reverbs = None, net_bursts = None, 
+                    start_time = None, end_time = None, save = None):
         """
         Plot a raster plot of spikes with optional overlay of reverberations, bursts, and network bursts.
 
@@ -2057,6 +2058,12 @@ class Analysis:
             The timestamps data of detected network reverberations.
         net_bursts : array_like, optional
             The timestamps data of detected network bursts.
+        start_time : float, optional
+            Starting time of the plot, in seconds. 
+        end_time : float, optional
+            Ending time of the plot, in seconds.
+        save : str, optional
+            Name of the generated plot figure.
 
         Returns
         -------
@@ -2096,16 +2103,21 @@ class Analysis:
         if reverbs: plot_channel_(reverbs)
         if net_bursts: plot_well_(net_bursts)
         plt.ylim(0,1)
-        plt.xlim(0, self.total_timesteps_signal/self.samplingFreq)
+        if start_time is None: start_time = 0
+        if end_time is None: end_time = self.total_timesteps_signal/self.samplingFreq 
+        plt.xlim(start_time, end_time)
         plt.tick_params(axis = 'y',
                         which = 'both',
                         direction = 'in')
         plt.yticks(y_ticks[::-1], labels = [f'e{channel+1}' for channel in range(number_of_channels)], fontsize = 20)
         plt.xticks([])
+        if save is not None:
+            plt.save(save)
         plt.show()
 
 
-    def plot_raster_well(self, file:str, well, method = 'default', reverbs = False, bursts = False, net_reverbs = False, net_bursts = False):
+    def plot_raster_well(self, file:str, well, method = 'default', reverbs = False, bursts = False, net_reverbs = False, 
+                         net_bursts = False, start_time = None, end_time = None, save = None):
         """
         Plot a raster plot for a specific well with optional overlay of events.
 
@@ -2125,7 +2137,14 @@ class Analysis:
             Whether to overlay detected network reverberations on the raster plot. Default is False.
         net_bursts : bool, optional
             Whether to overlay detected network bursts on the raster plot. Default is False.
+        start_time : float, optional
+            Starting time of the plot, in seconds. 
+        end_time : float, optional
+            Ending time of the plot, in seconds.
+        save : str, optional
+            Name of the generated plot figure.
 
+            
         Returns
         -------
         None
@@ -2142,7 +2161,8 @@ class Analysis:
         net_bursts_ = self.net_bursts if net_bursts else None
 
         self.plot_raster(self.spikes, reverbs = reverbs_, bursts = bursts_,
-                        net_reverbs = net_reverbs_, net_bursts = net_bursts_)
+                        net_reverbs = net_reverbs_, net_bursts = net_bursts_,
+                        start_time = start_time, end_time = end_time, save = save)
         
 
 
