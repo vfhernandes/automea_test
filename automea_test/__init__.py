@@ -7,6 +7,7 @@ with redirect_stderr(open(os.devnull, "w")):
 import h5py
 import numpy as np 
 import matplotlib.pyplot as plt
+#from analyseMEA import *
 from automea import util
 
 class Analysis:
@@ -52,14 +53,108 @@ class Analysis:
     time : array_like or None
         The time array. Default is None.
     spikes : array_like or None
-        The detected spikes. Default is None.
+        The detected spikes. List with timestamp of every spike. Default is None. 
     spikes_binary : array_like or None
         The binary representation of detected spikes. Default is None.
     reverbs : array_like or None
-        The detected reverberations. Default is None.
+        The detected reverberations. List of lists with start and end timestamp of reverb. Default is None.
     reverbs_binary : array_like or None
         The binary representation of detected reverberations. Default is None.
-    bursts : array
+    bursts : array_like or None
+        The detected bursts. List of lists with start and end timestamp of burst. Default is None.
+    bursts_binary : array_like or None
+        The binary representation of detected bursts. Default is None.
+    net_reverbs : array_like or None
+        The detected network reverberations. List of lists with start and end timestamp of network reverb. Default is None.
+    reverbs_binary : array_like or None
+        The binary representation of detected network reverberations. Default is None.
+    net_bursts : array_like or None
+        The detected network bursts. List of lists with start and end timestamp of network burst. Default is None.
+    net_bursts_binary : array_like or None
+        The binary representation of detected network bursts. Default is None.
+    adZero : int
+        Variable to convert integer signal (default in h5 dataset) to mV. Is subracted from integer signal. Default is 0
+    conversionFactor : int
+        Variable to convert integer signal (default in h5 dataset) to mV. Is multiplied to integer signal. Default is 59604
+    exponent : int
+        Variable to convert integer signal (default in h5 dataset) to mV. Is multiplied to integer signal. Default is -12
+    samplingFreq : int
+        Sampling frequency used to measure the signal. Default is 10_000 (10 kHz)
+    total_timesteps_signal : int
+        Number of timesteps present in measured signal. Default is 6 million.
+    time : array_like
+        Array containing time for measured signal in seconds. Uses samplingFreq and total_timesteps_signal.
+    threshold_params : dict
+        Dictionary of parameters used to detect threshold. Includes:
+                'rising' : (key : str, value : int) 
+                    How many standard deviations are used to set threshold. Default is 5.
+                'startTime' : (key : str, value : float) 
+                    Start time (s) to consider signal. Default is 0.
+                'baseTime' : (key : str, value : float) 
+                    Time lenght in ms to consider signal for std calculation. Default is 0.250.
+                'segments' : (key : str, value : int) 
+                    Number of segment to perform for calculation. Default is 10.
+    spike_params : dict
+        Dictionary of parameters used to detect spikes. Includes:
+            - 'deadtime': (key : str, value : float)
+                Amount of time after detecting a spike for which no spike is detect. Default is 3_000*1e-6.
+
+    reverbs_params : dict
+        Dictionary of parameters used to detect reverberations. Includes:
+            'max_interval_start' : (key : str, value : int)
+                Maximum interval between spikes to start reverberation detection in ms. Default is 15. 
+            'max_interval_end' : (key : str, value : int)
+                Maximum interval between spikes to end reverberation detection in ms. Default is 20. 
+            'min_interval_between' : (key : str, value : int)
+                Minimum interval between spikes to consider for reverberation detection in ms. Default is 25. 
+            'min_duration' : (key : str, value : int)
+                Minimum reverberation duration in ms. Default is 20. 
+            'min_spikes' : (key : str, value : int)
+                Minimum number of spikes to consider in a reverberation. Default is 5.
+
+    self.bursts_params : dict
+        Dictionary of parameters used to detect bursts (from reverberations). Includes:
+            'min_interval_between' : (key : str, value : int)
+                Minimum interval between spikes to consider for reverberation detection in ms. Default is 300. 
+    
+    _pretrained_models : list of str
+        List containing name of pretrained ML models used for reverberation detection.
+
+    model_params : dict
+        Dictionary of parameters used in model-based reverberation detection. Includes:
+            'name' : (key : str, value : str) 
+                Name of the model. Default is None.
+            'input_type' : (key : str, value : str) 
+                String defining type of input used by the model ('signal' or 'spikes'). Deault is None and changed when model is loaded.
+            'input_average' : (key : str, value : int) 
+                How many points are used to calculate average of input. Default is 30.
+            'window_size' : (key : str, value : int) 
+                Size of window (in timestamps) used as input for the model (before averaging). Default is 50_000.
+            'window_overlap' : (key : str, value : int) 
+                Overlap between windows when sweeping a channel. Default is 25_000.
+
+    analysis_params : dict
+        Parameters for analysis - which quantities user wants to save - each one creates an output file. Includes:
+            'save_spikes' : (key : str, value : bool) 
+                Whether or not to save spikes in a dedicated file. Default is False.
+            'save_reverbs' : (key : str, value : bool)
+                Whether or not to save reverberations in a dedicated file. Default is False.
+            'save_bursts' : (key : str, value : bool)
+                Whether or not to save bursts in a dedicated file. Default is False.
+            'save_net_reverbs : (key : str, value : bool)
+                Whether or not to save network reverberations in a dedicated file. Default is False.
+            'save_net_bursts' : (key : str, value : bool)
+                Whether or not to save network bursts in a dedicated file. Default is False.
+            'save_stats' : (key : str, value : bool)
+                Whether or not to save statistics in a dedicated file. Default is False.
+
+    wellIndexLabelDict : dict
+        Dictionary to convert well-index to well-label.
+    wellLabelIndexDict : dict
+        Dictionary to convert well-label to well-index.
+
+
+
 
     Methods
     -------
@@ -193,6 +288,13 @@ class Analysis:
         self.reverbs_binary = None
         self.bursts = None
         self.bursts_binary = None
+        self.net_reverbs = None
+        self.net_reverbs_binary = None
+        self.net_bursts = None
+        self.net_bursts_binary = None
+        self.adZero, self.conversionFactor, self.exponent = 0, 59604, -12
+
+
         self.plot_name = None
 
 
@@ -474,7 +576,7 @@ class Analysis:
             The raw signal values to be converted.
 
         adzero : float
-            The AD Zero value.
+            The adZero value to subract from signal.
 
         conversionfactor : float
             The conversion factor to convert raw values to physical units.
@@ -1917,7 +2019,6 @@ class Analysis:
             plt.hlines(position_net_bursts,net_bursts[0]/self.samplingFreq,net_bursts[-1]/self.samplingFreq, colors = 'orange', lw = 6.5)
 
         plt.plot(np.arange(start_timestamp, end_timestamp)/self.samplingFreq, sig[start_timestamp:end_timestamp], c = 'k', lw = 1)
-        # plt.axhline(0, c = 'k', lw = 1)
         if threshold is not None:
             if yunits.lower() == 'a.u.':
                 thresh = self.normalize_threshold(signal, threshold)
