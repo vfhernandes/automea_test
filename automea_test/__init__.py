@@ -2116,6 +2116,7 @@ class Analysis:
         if save is not None:
             plt.savefig(save)
         if show: plt.show()
+        plt.close()
 
 
     def plot_raster_well(self, file:str, well, method = 'default', reverbs = False, bursts = False, net_reverbs = False, 
