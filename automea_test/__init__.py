@@ -1869,7 +1869,7 @@ class Analysis:
     ########
 
     def plot_window(self, signal, start_time=None, duration=None, threshold=None, spikes=None, reverberations=None,
-                    bursts=None, net_bursts=None, save=False, output_name=None, figsize=(6, 6), yunits='a.u.',
+                    bursts=None, net_bursts=None, save=None, show = True, figsize=(6, 6), yunits='a.u.',
                     xunits='s'):
         """
         Plot a window of the signal with detected spikes, reverberations, bursts, and network bursts.
@@ -1892,10 +1892,10 @@ class Analysis:
             The timestamps data detected bursts. Default is None
         net_bursts : array_like, optional
             The timestamps data of detected network bursts. Default is None
-        save : bool, optional
-            Whether to save the plot as a JPG file. Default is False.
-        output_name : str, optional
-            The name of the output JPG file if save is True. Default is None.
+        save : str, optional
+            Name of the generated plot figure.
+        show : bool, optional
+            Whether to show or not the plot. Default is True.
         figsize : tuple, optional
             The size of the figure (width, height) in inches. Default is (6, 6).
         yunits : str, optional
@@ -2035,14 +2035,14 @@ class Analysis:
             plt.ylim(1.35*min(sig), 1.35*max(sig))
         plt.xlim(start_timestamp/self.samplingFreq, end_timestamp/self.samplingFreq)
         plt.grid(ls = 'dotted')
-        if save:
-            plt.savefig(f'{output_name}.jpg')
-        plt.show()
+        if save is not None:
+            plt.savefig(save)
+        if show: plt.show()
         plt.close()
 
 
     def plot_raster(self, spikes, reverbs = None, bursts = None, net_reverbs = None, net_bursts = None, 
-                    start_time = None, end_time = None, save = None):
+                    start_time = None, end_time = None, save = None, show = True):
         """
         Plot a raster plot of spikes with optional overlay of reverberations, bursts, and network bursts.
 
@@ -2064,6 +2064,8 @@ class Analysis:
             Ending time of the plot, in seconds.
         save : str, optional
             Name of the generated plot figure.
+        show : bool, optional
+            Whether to show or not the plot. Default is True.
 
         Returns
         -------
@@ -2091,7 +2093,7 @@ class Analysis:
         def plot_well_(nets):
             for net in nets:
                 plt.fill_between(np.array([net[0]/self.samplingFreq, net[1]/self.samplingFreq]), 
-                    1, 0, color = 'k', alpha = 0.3, zorder = 1)
+                    1, 0, color = '#DEE3E2', zorder = 1)
                 
         plt.figure(figsize = (10,5))
         height = 1/number_of_channels
@@ -2112,8 +2114,8 @@ class Analysis:
         plt.yticks(y_ticks[::-1], labels = [f'e{channel+1}' for channel in range(number_of_channels)], fontsize = 20)
         plt.xticks([])
         if save is not None:
-            plt.save(save)
-        plt.show()
+            plt.savefig(save)
+        if show: plt.show()
 
 
     def plot_raster_well(self, file:str, well, method = 'default', reverbs = False, bursts = False, net_reverbs = False, 
@@ -2144,7 +2146,7 @@ class Analysis:
         save : str, optional
             Name of the generated plot figure.
 
-            
+
         Returns
         -------
         None
