@@ -7,7 +7,7 @@ with redirect_stderr(open(os.devnull, "w")):
 import h5py
 import numpy as np 
 import matplotlib.pyplot as plt
-#from analyseMEA import *
+import matplotlib as mpl
 from automea import util
 
 class Analysis:
@@ -1427,7 +1427,7 @@ class Analysis:
 
 
 
-    def detect_net(self, inp, minChannelsParticipating=8, minSimultaneousChannels=6):
+    def detect_net(self, inp, minChannelsParticipating=6, minSimultaneousChannels=3):
         """
         Detect net bursts or net reverbs.
 
@@ -1990,7 +1990,7 @@ class Analysis:
 
         if yunits.lower() == 'a.u.':
             sig = self.normalize_signal(signal)
-        elif yunits.lower() == 'mv':
+        elif yunits.lower() == 'v':
             sig = self.convert_signal(signal, self.adZero, self.conversionFactor, self.exponent)
 
         fig = plt.figure(figsize=figsize)
@@ -1998,40 +1998,42 @@ class Analysis:
 
 
         for spike in spikes_to_plot:
-            plt.axvline(spike/self.samplingFreq,0,0.022, c = '#660033', lw = 1)
+            plt.axvline(spike/self.samplingFreq,0,0.022, c = 'k', lw = 0.5)
 
         if yunits.lower() == 'a.u.':
+            ylabel = yunits
             position_reverb = -1.24
             position_bursts = -1.164
             position_net_bursts = -1.07
-        elif yunits.lower() == 'mv':
+        elif yunits.lower() == 'v':
+            ylabel = chr(956)+'V'
             position_reverb = 1.24*(min(sig))
             position_bursts = 1.164*(min(sig))
             position_net_bursts = 1.07*(min(sig))
 
         for reverb in reverbs_to_plot:
-            plt.hlines(position_reverb,reverb[0]/self.samplingFreq,reverb[-1]/self.samplingFreq, colors = 'blue', lw = 6.5)
+            plt.hlines(position_reverb,reverb[0]/self.samplingFreq,reverb[-1]/self.samplingFreq, colors = mpl.cm.Set3(3/11), lw = 6.5)
 
         for burst in bursts_to_plot:
-            plt.hlines(position_bursts,burst[0]/self.samplingFreq,burst[-1]/self.samplingFreq, colors = '#FF3333', lw = 6.5)
+            plt.hlines(position_bursts,burst[0]/self.samplingFreq,burst[-1]/self.samplingFreq, colors = mpl.cm.Set3(4/11), lw = 6.5)
 
         for net_bursts in net_bursts_to_plot:
-            plt.hlines(position_net_bursts,net_bursts[0]/self.samplingFreq,net_bursts[-1]/self.samplingFreq, colors = 'orange', lw = 6.5)
+            plt.hlines(position_net_bursts,net_bursts[0]/self.samplingFreq,net_bursts[-1]/self.samplingFreq, colors = mpl.cm.Set3(5/11), lw = 6.5)
 
         plt.plot(np.arange(start_timestamp, end_timestamp)/self.samplingFreq, sig[start_timestamp:end_timestamp], c = 'k', lw = 1)
         if threshold is not None:
             if yunits.lower() == 'a.u.':
                 thresh = self.normalize_threshold(signal, threshold)
-            elif yunits.lower() == 'mv':
+            elif yunits.lower() == 'v':
                 thresh = self.convert_threshold(threshold, self.adZero, self.conversionFactor, self.exponent)
             plt.axhline(thresh, color = 'k', lw = 2)
             plt.axhline(-thresh, color = 'k', lw = 2)
         plt.xlabel(f'Time [{xunits}]')
-        plt.ylabel(f'Signal [{yunits}]')
+        plt.ylabel(f'Signal [{ylabel}]')
 
         if yunits.lower() == 'a.u.':
             plt.ylim(-1.35,1.35)
-        elif yunits.lower() == 'mv':
+        elif yunits.lower() == 'v':
             plt.ylim(1.35*min(sig), 1.35*max(sig))
         plt.xlim(start_timestamp/self.samplingFreq, end_timestamp/self.samplingFreq)
         plt.grid(ls = 'dotted')
