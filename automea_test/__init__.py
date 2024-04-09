@@ -647,6 +647,13 @@ class Analysis:
         """
 
         self.spikes = spikes
+        if self.signal.ndim == 1:
+            self.spikes_binary = self.convert_timestamps_to_binary(self.spikes, input_type = 'spikes')
+        else:
+            self.spikes_binary = np.zeros((len(self.spikes), self.total_timesteps_signal))
+            for channel, spikes_ in enumerate(self.spikes):
+                self.spikes_binary[channel] = self.convert_timestamps_to_binary(spikes_, input_type = 'spikes')
+        
 
 
     def loadwell(self, file:str, well, method = 'default', spikes = False, reverbs = False, bursts = False, net_reverbs = False, net_bursts = False):
@@ -1868,9 +1875,9 @@ class Analysis:
     ########
     ########
 
-    def plot_window(self, signal, start_time=None, duration=None, threshold=None, spikes=None, reverberations=None,
-                    bursts=None, net_bursts=None, save=None, show = True, figsize=(6, 6), yunits='a.u.',
-                    xunits='s'):
+    def plot_window(self, signal, start_time=None, duration=None, threshold=None, spikes=None, 
+                    reverberations=None, net_reverberations=None, bursts=None, net_bursts=None, 
+                    save=None, show = True, figsize=(6, 6), yunits='a.u.', xunits='s'):
         """
         Plot a window of the signal with detected spikes, reverberations, bursts, and network bursts.
 
@@ -1977,6 +1984,19 @@ class Analysis:
                     return            
             bursts_to_plot = select_bursts_to_plot(bursts, start_timestamp, end_timestamp)
 
+        net_reverbs_to_plot = []
+        if net_reverberations:
+            if isinstance(net_reverberations, np.ndarray):
+                if net_reverberations.ndim > 2:
+                    print("More than one reverberations channel input!")
+                    return
+            elif self.util._has_list(net_reverberations[0]):
+                    print("More than one reverberations channel input!")
+                    return            
+            net_reverbs_to_plot = select_bursts_to_plot(net_reverberations, start_timestamp, end_timestamp)
+
+
+
         net_bursts_to_plot = []
         if net_bursts:
             if isinstance(net_bursts, np.ndarray):
@@ -2007,13 +2027,18 @@ class Analysis:
             position_net_bursts = -1.07
         elif yunits.lower() == 'v':
             ylabel = chr(956)+'V'
-            position_reverb = 1.24*(min(sig))
-            position_bursts = 1.164*(min(sig))
-            position_net_bursts = 1.07*(min(sig))
+            position_reverb = 1.25*(min(sig))
+            position_net_reverb = 1.175*(min(sig))
+            position_bursts = 1.1*(min(sig))
+            position_net_bursts = 1.025*(min(sig))
 
         for reverb in reverbs_to_plot:
-            plt.hlines(position_reverb,reverb[0]/self.samplingFreq,reverb[-1]/self.samplingFreq, colors = mpl.cm.Set3(3/11), lw = 6.5)
+            plt.hlines(position_reverb,reverb[0]/self.samplingFreq,reverb[-1]/self.samplingFreq, colors = mpl.cm.Set3(2/11), lw = 6.5)
 
+        for net_reverb in net_reverbs_to_plot:
+            plt.hlines(position_net_reverb,net_reverb[0]/self.samplingFreq,net_reverb[-1]/self.samplingFreq, colors = mpl.cm.Set3(3/11), lw = 6.5)
+        
+        
         for burst in bursts_to_plot:
             plt.hlines(position_bursts,burst[0]/self.samplingFreq,burst[-1]/self.samplingFreq, colors = mpl.cm.Set3(4/11), lw = 6.5)
 
