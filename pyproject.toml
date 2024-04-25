@@ -1,6 +1,6 @@
 [project]
 name = "automea-test"
-version = "0.0.13"
+version = "0.0.15"
 authors = [
   { name="Vinicius Hernandes", email="viniciusfhernandes@gmail.com" },
 ]
@@ -15,3 +15,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/vfhernandes/automea_test"
+
+[tool.setuptools]
+# ...
+package-dir = {"" = "src"}
